@@ -1,172 +1,72 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>عرض محمي لملف PDF</title>
+  <title>عرض PDF للقراءة فقط</title>
   <style>
-    body {
+    * {
       margin: 0;
       padding: 0;
-      background-color: #f0f0f0;
-      font-family: Arial, sans-serif;
-      overflow: hidden;
+      box-sizing: border-box;
       user-select: none;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
     }
-    
-    #pdf-container {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 80%;
-      height: 90vh;
-      background-color: white;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+
+    body, html {
+      width: 100%;
+      height: 100%;
       overflow: hidden;
+      background-color: #f4f4f4;
+      font-family: Arial, sans-serif;
     }
-    
-    #pdf-viewer {
+
+    .pdf-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    iframe {
       width: 100%;
       height: 100%;
       border: none;
+    }
+
+    .banner {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 9999;
       pointer-events: none;
     }
-    
-    #overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 100;
-      background: transparent;
-    }
-    
-    #warning {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      background-color: rgba(0, 0, 0, 0.7);
-      color: white;
-      padding: 10px;
-      border-radius: 5px;
-      font-size: 14px;
-      display: none;
-    }
-    
-    #controls {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      z-index: 200;
-    }
-    
-    .control-btn {
-      background-color: rgba(0, 0, 0, 0.7);
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      margin: 0 5px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
   </style>
+  <script>
+    // تعطيل زر الفأرة الأيمن
+    document.addEventListener("contextmenu", e => e.preventDefault());
+
+    // تعطيل اختصارات الحفظ والطباعة
+    document.addEventListener("keydown", function(e) {
+      if (
+        e.ctrlKey && (
+          e.key === 's' || e.key === 'p' || e.key === 'u'
+        ) || (e.key === 'F12') || (e.ctrlKey && e.shiftKey && e.key === 'I')
+      ) {
+        e.preventDefault();
+      }
+    });
+  </script>
 </head>
 <body>
-  <div id="pdf-container">
-    <iframe id="pdf-viewer" src="t.pdf#toolbar=0&navpanes=0&scrollbar=0"></iframe>
-    <div id="overlay"></div>
+  <div class="pdf-container">
+    <iframe 
+      src="t.pdf#toolbar=0&navpanes=0&scrollbar=1">
+    </iframe>
+    <div class="banner">📄 للعرض فقط - لا يمكن التنزيل أو النسخ</div>
   </div>
-  
-  <div id="warning">التصوير أو النسخ غير مسموح به</div>
-  
-  <div id="controls">
-    <button class="control-btn" onclick="zoomIn()">تكبير +</button>
-    <button class="control-btn" onclick="zoomOut()">تصغير -</button>
-    <button class="control-btn" onclick="nextPage()">الصفحة التالية</button>
-    <button class="control-btn" onclick="prevPage()">الصفحة السابقة</button>
-  </div>
-
-  <script>
-    // منع جميع الإجراءات غير المرغوب فيها
-    document.addEventListener("contextmenu", function(e) {
-      e.preventDefault();
-      showWarning();
-    });
-    
-    document.addEventListener("keydown", function(e) {
-      // منع اختصارات لوحة المفاتيح
-      if (e.ctrlKey || e.metaKey) {
-        if (e.key === 's' || e.key === 'c' || e.key === 'p') {
-          e.preventDefault();
-          showWarning();
-        }
-      }
-      
-      // منع تصوير الشاشة
-      if (e.key === 'PrintScreen') {
-        e.preventDefault();
-        showWarning();
-      }
-    });
-    
-    // منع السحب والإسقاط
-    document.addEventListener("dragstart", function(e) {
-      e.preventDefault();
-    });
-    
-    // منع التحديد
-    document.addEventListener("selectstart", function(e) {
-      e.preventDefault();
-    });
-    
-    // إظهار تحذير عند محاولة النسخ
-    function showWarning() {
-      const warning = document.getElementById('warning');
-      warning.style.display = 'block';
-      setTimeout(() => {
-        warning.style.display = 'none';
-      }, 2000);
-    }
-    
-    // التحكم في التكبير/التصغير
-    let scale = 1;
-    function zoomIn() {
-      scale += 0.1;
-      document.getElementById('pdf-viewer').style.transform = `scale(${scale})`;
-    }
-    
-    function zoomOut() {
-      if (scale > 0.5) {
-        scale -= 0.1;
-        document.getElementById('pdf-viewer').style.transform = `scale(${scale})`;
-      }
-    }
-    
-    // التحكم في الصفحات (يعتمد على دعم المتصفح)
-    function nextPage() {
-      const iframe = document.getElementById('pdf-viewer');
-      iframe.contentWindow.PDFViewerApplication.page++;
-    }
-    
-    function prevPage() {
-      const iframe = document.getElementById('pdf-viewer');
-      if (iframe.contentWindow.PDFViewerApplication.page > 1) {
-        iframe.contentWindow.PDFViewerApplication.page--;
-      }
-    }
-    
-    // حماية إضافية: منع فتح أدوات المطورين
-    setInterval(function() {
-      if (window.outerWidth - window.innerWidth > 100 || 
-          window.outerHeight - window.innerHeight > 100) {
-        document.body.innerHTML = '<h1 style="text-align:center;margin-top:50px;">غير مسموح باستخدام أدوات المطورين</h1>';
-      }
-    }, 1000);
-  </script>
 </body>
 </html>
