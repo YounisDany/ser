@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>عرض PDF بدون تحميل</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    iframe {
+      width: 100vw;
+      height: 100vh;
+      border: none;
+      pointer-events: none; /* يمنع التفاعل مع الملف */
+    }
+  </style>
+  <script>
+    // منع النقر بزر الماوس الأيمن
+    document.addEventListener("contextmenu", function(e) {
+      e.preventDefault();
+    });
+  </script>
+</head>
+<body>
+  <iframe src="t.pdf#toolbar=0&navpanes=0&scrollbar=0"></iframe>
+</body>
+</html>
