@@ -129,56 +129,7 @@
   <div id="warning">هذا المستند محمي ولا يسمح بالتنزيل أو النسخ</div>
 
   <script>
-    // إخفاء شاشة التحميل عندما يصبح المستند جاهزاً
-    document.getElementById('pdf-viewer').onload = function() {
-      document.getElementById('loading').style.display = 'none';
-    };
-    
-    // منع جميع الإجراءات غير المرغوب فيها على الجوال
-
-    // منع التكبير/التصغير باللمس المزدوج
-    let lastTouchEnd = 0;
-    document.addEventListener('touchend', function(event) {
-      const now = (new Date()).getTime();
-      if (now - lastTouchEnd <= 300) {
-        event.preventDefault();
-        showWarning();
-      }
-      lastTouchEnd = now;
-    }, false);
-    
-    // منع التمرير خارج الإطار
-    document.addEventListener('touchmove', function(e) {
-      if (e.target.id !== 'pdf-viewer') {
-        e.preventDefault();
-      }
-    }, { passive: false });
-    
-    // منع لمس طويل (لمنع خيارات النسخ)
-    document.addEventListener('longpress', function(e) {
-      e.preventDefault();
-      showWarning();
-    });
-    
-    let touchTimer;
-    document.addEventListener('touchstart', function(e) {
-      touchTimer = setTimeout(function() {
-        showWarning();
-      }, 500);
-    });
-    
-    document.addEventListener('touchend', function(e) {
-      clearTimeout(touchTimer);
-    });
-    
-    // منع اختصارات لوحة المفاتيح على الأجهزة مع لوحة مفاتيح
-    document.addEventListener('keydown', function(e) {
-      if (e.ctrlKey || e.metaKey || e.key === 'PrintScreen') {
-        e.preventDefault();
-        showWarning();
-      }
-    });
-    
+   
     // إظهار تحذير
     function showWarning() {
       const warning = document.getElementById('warning');
