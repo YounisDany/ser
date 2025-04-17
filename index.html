@@ -135,11 +135,7 @@
     };
     
     // منع جميع الإجراءات غير المرغوب فيها على الجوال
-    document.addEventListener('contextmenu', function(e) {
-      e.preventDefault();
-      showWarning();
-    });
-    
+
     // منع التكبير/التصغير باللمس المزدوج
     let lastTouchEnd = 0;
     document.addEventListener('touchend', function(event) {
