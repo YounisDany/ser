@@ -129,46 +129,7 @@
   <div id="warning">هذا المستند محمي ولا يسمح بالتنزيل أو النسخ</div>
 
   <script>
-   
-    // إظهار تحذير
-    function showWarning() {
-      const warning = document.getElementById('warning');
-      warning.style.display = 'block';
-      setTimeout(() => {
-        warning.style.display = 'none';
-      }, 3000);
-    }
-    
-    // التحكم في الصفحات
-    let currentPage = 1;
-    
-    function nextPage() {
-      const iframe = document.getElementById('pdf-viewer');
-      try {
-        iframe.contentWindow.PDFViewerApplication.page++;
-        currentPage++;
-      } catch (e) {
-        // طريقة بديلة إذا لم تعمل الطريقة الأولى
-        iframe.src = iframe.src.split('#')[0] + `#page=${currentPage + 1}`;
-        currentPage++;
-      }
-    }
-    
-    function prevPage() {
-      if (currentPage > 1) {
-        const iframe = document.getElementById('pdf-viewer');
-        try {
-          iframe.contentWindow.PDFViewerApplication.page--;
-          currentPage--;
-        } catch (e) {
-          // طريقة بديلة إذا لم تعمل الطريقة الأولى
-          iframe.src = iframe.src.split('#')[0] + `#page=${currentPage - 1}`;
-          currentPage--;
-        }
-      }
-    }
-    
-    
+  
     // حماية إضافية ضد أدوات المطورين
   
   </script>
