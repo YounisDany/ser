@@ -1,72 +1,247 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>عرض PDF للقراءة فقط</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>عرض PDF محمي</title>
   <style>
     * {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
-      user-select: none;
+      background-color: #111;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      touch-action: none;
+      height: 100vh;
     }
-
-    body, html {
+    
+    #pdf-wrapper {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #222;
+    }
+    
+    #pdf-container {
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #f4f4f4;
-      font-family: Arial, sans-serif;
-    }
-
-    .pdf-container {
-      width: 100%;
-      height: 100%;
       position: relative;
     }
-
-    iframe {
+    
+    #pdf-viewer {
       width: 100%;
       height: 100%;
       border: none;
-    }
-
-    .banner {
-      position: absolute;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.7);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 14px;
-      z-index: 9999;
       pointer-events: none;
     }
+    
+    #touch-guard {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 100;
+    }
+    
+    #warning {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: rgba(255, 0, 0, 0.8);
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 16px;
+      display: none;
+      z-index: 200;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+    
+    .page-nav {
+      position: fixed;
+      bottom: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      z-index: 150;
+    }
+    
+    .nav-btn {
+      background-color: rgba(0, 100, 200, 0.8);
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 50px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 300;
+      color: white;
+      font-size: 20px;
+    }
   </style>
-  <script>
-    // تعطيل زر الفأرة الأيمن
-    document.addEventListener("contextmenu", e => e.preventDefault());
-
-    // تعطيل اختصارات الحفظ والطباعة
-    document.addEventListener("keydown", function(e) {
-      if (
-        e.ctrlKey && (
-          e.key === 's' || e.key === 'p' || e.key === 'u'
-        ) || (e.key === 'F12') || (e.ctrlKey && e.shiftKey && e.key === 'I')
-      ) {
-        e.preventDefault();
-      }
-    });
-  </script>
 </head>
 <body>
-  <div class="pdf-container">
-    <iframe 
-      src="t.pdf#toolbar=0&navpanes=0&scrollbar=1">
-    </iframe>
-    <div class="banner">📄 للعرض فقط - لا يمكن التنزيل أو النسخ</div>
+  <div id="loading">جاري تحميل المستند...</div>
+  
+  <div id="pdf-wrapper">
+    <div id="pdf-container">
+      <iframe id="pdf-viewer" src="t.pdf#toolbar=0&navpanes=0&scrollbar=0"></iframe>
+      <div id="touch-guard"></div>
+    </div>
   </div>
+  
+  <div class="page-nav">
+    <button class="nav-btn" onclick="prevPage()">السابق</button>
+    <button class="nav-btn" onclick="nextPage()">التالي</button>
+  </div>
+  
+  <div id="warning">هذا المستند محمي ولا يسمح بالتنزيل أو النسخ</div>
+
+  <script>
+    // إخفاء شاشة التحميل عندما يصبح المستند جاهزاً
+    document.getElementById('pdf-viewer').onload = function() {
+      document.getElementById('loading').style.display = 'none';
+    };
+    
+    // منع جميع الإجراءات غير المرغوب فيها على الجوال
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      showWarning();
+    });
+    
+    // منع التكبير/التصغير باللمس المزدوج
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+        showWarning();
+      }
+      lastTouchEnd = now;
+    }, false);
+    
+    // منع التمرير خارج الإطار
+    document.addEventListener('touchmove', function(e) {
+      if (e.target.id !== 'pdf-viewer') {
+        e.preventDefault();
+      }
+    }, { passive: false });
+    
+    // منع لمس طويل (لمنع خيارات النسخ)
+    document.addEventListener('longpress', function(e) {
+      e.preventDefault();
+      showWarning();
+    });
+    
+    let touchTimer;
+    document.addEventListener('touchstart', function(e) {
+      touchTimer = setTimeout(function() {
+        showWarning();
+      }, 500);
+    });
+    
+    document.addEventListener('touchend', function(e) {
+      clearTimeout(touchTimer);
+    });
+    
+    // منع اختصارات لوحة المفاتيح على الأجهزة مع لوحة مفاتيح
+    document.addEventListener('keydown', function(e) {
+      if (e.ctrlKey || e.metaKey || e.key === 'PrintScreen') {
+        e.preventDefault();
+        showWarning();
+      }
+    });
+    
+    // إظهار تحذير
+    function showWarning() {
+      const warning = document.getElementById('warning');
+      warning.style.display = 'block';
+      setTimeout(() => {
+        warning.style.display = 'none';
+      }, 3000);
+    }
+    
+    // التحكم في الصفحات
+    let currentPage = 1;
+    
+    function nextPage() {
+      const iframe = document.getElementById('pdf-viewer');
+      try {
+        iframe.contentWindow.PDFViewerApplication.page++;
+        currentPage++;
+      } catch (e) {
+        // طريقة بديلة إذا لم تعمل الطريقة الأولى
+        iframe.src = iframe.src.split('#')[0] + `#page=${currentPage + 1}`;
+        currentPage++;
+      }
+    }
+    
+    function prevPage() {
+      if (currentPage > 1) {
+        const iframe = document.getElementById('pdf-viewer');
+        try {
+          iframe.contentWindow.PDFViewerApplication.page--;
+          currentPage--;
+        } catch (e) {
+          // طريقة بديلة إذا لم تعمل الطريقة الأولى
+          iframe.src = iframe.src.split('#')[0] + `#page=${currentPage - 1}`;
+          currentPage--;
+        }
+      }
+    }
+    
+    // حماية ضد تصوير الشاشة (لأجهزة الأندرويد)
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        document.body.innerHTML = '<h1 style="color:white;text-align:center;margin-top:50px;">تم اكتشاف محاولة تصوير الشاشة</h1>';
+      }
+    });
+    
+    // منع التقاط لقطة شاشة (لأجهزة iOS)
+    document.addEventListener('securitypolicyviolation', function(e) {
+      if (e.blockedURI.includes('capture') || e.blockedURI.includes('screenshot')) {
+        showWarning();
+      }
+    });
+    
+    // حماية إضافية ضد أدوات المطورين
+    setInterval(function() {
+      if (window.outerWidth - window.innerWidth > 100 || 
+          window.outerHeight - window.innerHeight > 100) {
+        document.body.innerHTML = '<h1 style="color:white;text-align:center;margin-top:50px;">غير مسموح باستخدام أدوات المطورين</h1>';
+      }
+    }, 500);
+  </script>
 </body>
 </html>
