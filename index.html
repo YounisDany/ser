@@ -168,27 +168,9 @@
       }
     }
     
-    // حماية ضد تصوير الشاشة (لأجهزة الأندرويد)
-    document.addEventListener('visibilitychange', function() {
-      if (document.hidden) {
-        document.body.innerHTML = '<h1 style="color:white;text-align:center;margin-top:50px;">تم اكتشاف محاولة تصوير الشاشة</h1>';
-      }
-    });
-    
-    // منع التقاط لقطة شاشة (لأجهزة iOS)
-    document.addEventListener('securitypolicyviolation', function(e) {
-      if (e.blockedURI.includes('capture') || e.blockedURI.includes('screenshot')) {
-        showWarning();
-      }
-    });
     
     // حماية إضافية ضد أدوات المطورين
-    setInterval(function() {
-      if (window.outerWidth - window.innerWidth > 100 || 
-          window.outerHeight - window.innerHeight > 100) {
-        document.body.innerHTML = '<h1 style="color:white;text-align:center;margin-top:50px;">غير مسموح باستخدام أدوات المطورين</h1>';
-      }
-    }, 500);
+  
   </script>
 </body>
 </html>
