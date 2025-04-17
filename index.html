@@ -2,122 +2,136 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>عرض PDF محمي</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>عرض ملف PDF</title>
   <style>
-    * {
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
-      -khtml-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    
     body {
       margin: 0;
       padding: 0;
-      background-color: #111;
+      background-color: #f5f5f5;
       font-family: Arial, sans-serif;
-      overflow: hidden;
-      touch-action: none;
       height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
     
-    #pdf-wrapper {
-      position: fixed;
-      top: 0;
-      left: 0;
-    \
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: #222;
+    header {
+      background-color: #2c3e50;
+      color: white;
+      padding: 15px;
+      text-align: center;
     }
     
     #pdf-container {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      position: relative;
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      background-color: #333;
     }
     
     #pdf-viewer {
       width: 100%;
       height: 100%;
       border: none;
-      pointer-events: none;
     }
     
-    #touch-guard {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 100;
-    }
-    
-    #warning {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background-color: rgba(255, 0, 0, 0.8);
-      color: white;
-      padding: 15px;
-      border-radius: 10px;
-      font-size: 16px;
-      display: none;
-      z-index: 200;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    }
-    
-    .page-nav {
-      position: fixed;
-      bottom: 20px;
-      width: 100%;
+    .controls {
       display: flex;
       justify-content: center;
-      gap: 20px;
-      z-index: 150;
+      gap: 10px;
+      padding: 10px;
+      background-color: #ecf0f1;
     }
     
-    .nav-btn {
-      background-color: rgba(0, 100, 200, 0.8);
+    button {
+      background-color: #3498db;
       color: white;
       border: none;
-      padding: 12px 25px;
-      border-radius: 50px;
-      font-size: 16px;
+      padding: 10px 15px;
+      border-radius: 5px;
       cursor: pointer;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
     }
     
-  
+    button:hover {
+      background-color: #2980b9;
+    }
+    
+    .page-info {
+      display: flex;
+      align-items: center;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
-  <div id="loading">جاري تحميل المستند...</div>
+  <header>
+    <h1>عرض المستند</h1>
+  </header>
   
-  <div id="pdf-wrapper">
-    <div id="pdf-container">
-      <iframe id="pdf-viewer" src="t.pdf#toolbar=0&navpanes=0&scrollbar=0"></iframe>
-      <div id="touch-guard"></div>
-    </div>
+  <div id="pdf-container">
+    <iframe id="pdf-viewer" src="t.pdf"></iframe>
   </div>
   
-  <div class="page-nav">
-    <button class="nav-btn" onclick="prevPage()">السابق</button>
-    <button class="nav-btn" onclick="nextPage()">التالي</button>
+  <div class="controls">
+    <button onclick="prevPage()">الصفحة السابقة</button>
+    <div class="page-info">الصفحة: <span id="current-page">1</span></div>
+    <button onclick="nextPage()">الصفحة التالية</button>
   </div>
-  
-  <div id="warning">هذا المستند محمي ولا يسمح بالتنزيل أو النسخ</div>
 
   <script>
-  
-    // حماية إضافية ضد أدوات المطورين
-  
+    // متغير لحفظ رقم الصفحة الحالية
+    let currentPage = 1;
+    let totalPages = 0;
+    
+    // عند تحميل المستند
+    document.getElementById('pdf-viewer').onload = function() {
+      try {
+        // محاولة الحصول على عدد الصفحات (يعمل في بعض المتصفحات)
+        totalPages = this.contentWindow.PDFViewerApplication.pagesCount;
+        updatePageInfo();
+      } catch (e) {
+        // إذا لم يعمل، نستخدم طريقة بديلة
+        console.log("لا يمكن الوصول إلى معلومات PDF مباشرة");
+      }
+    };
+    
+    // الانتقال للصفحة التالية
+    function nextPage() {
+      const viewer = document.getElementById('pdf-viewer');
+      try {
+        viewer.contentWindow.PDFViewerApplication.page++;
+        currentPage++;
+        updatePageInfo();
+      } catch (e) {
+        // طريقة بديلة إذا لم تعمل الطريقة الأولى
+        currentPage++;
+        viewer.src = viewer.src.split('#')[0] + `#page=${currentPage}`;
+        updatePageInfo();
+      }
+    }
+    
+    // الانتقال للصفحة السابقة
+    function prevPage() {
+      if (currentPage > 1) {
+        const viewer = document.getElementById('pdf-viewer');
+        try {
+          viewer.contentWindow.PDFViewerApplication.page--;
+          currentPage--;
+          updatePageInfo();
+        } catch (e) {
+          // طريقة بديلة إذا لم تعمل الطريقة الأولى
+          currentPage--;
+          viewer.src = viewer.src.split('#')[0] + `#page=${currentPage}`;
+          updatePageInfo();
+        }
+      }
+    }
+    
+    // تحديث معلومات الصفحة المعروضة
+    function updatePageInfo() {
+      const pageInfo = document.getElementById('current-page');
+      pageInfo.textContent = currentPage;
+    }
   </script>
 </body>
 </html>
